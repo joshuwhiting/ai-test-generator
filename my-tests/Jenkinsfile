@@ -2,21 +2,23 @@ pipeline {
     agent {
         docker {
             image 'python:3.11-slim'
-            args '-u root'
+            args '-u root --add-host=host.docker.internal:host-gateway'
         }
     }
-
+    environment{
+        OLLAMA_HOST = 'http://host.docker.internal:11434'
+    }
     stages {
         stage('Install Dependencies') {
             steps {
                 sh 'python3 -m pip install -r my-tests/requirements.txt'
             }
         }
-        stage('Run Tests') {
-            steps {
-                sh 'pytest my-tests/tests/ --tb=short'
-            }
+    stage('Generate & Run Tests') {
+        steps {
+            sh 'python3 test_generator.py my_code.py'
         }
+    }
     }
 
     post {
