@@ -1,0 +1,56 @@
+- generic [ref=e85]:
+  - generic [ref=e86]:
+    - generic [ref=e90]:
+      - generic [ref=e91]:
+        - generic [ref=e92]:
+          - text: Four Seasons Resort
+          - heading "Bora Bora" [level=1] [ref=e93]
+          - generic [ref=e94]: Motu Tehotu - BP 547, 98730, Bora Bora, French Polynesia
+        - generic [ref=e95]:
+          - link "Please call us (689) 40 603 130" [ref=e96] [cursor=pointer]:
+            - /url: tel:68940603130
+            - text: (689) 40 603 130
+          - link "Location" [ref=e97] [cursor=pointer]:
+            - /url: /borabora/getting-here/
+          - link "Contact Us" [ref=e98] [cursor=pointer]:
+            - /url: /borabora/contact-us/
+      - generic [ref=e99]:
+        - button " Previous slide" [disabled]:
+          - text: 
+          - generic: Previous slide
+        - generic [ref=e103]:
+          - link " Location" [ref=e105] [cursor=pointer]:
+            - /url: /borabora/getting-here/?_s_icmp=ja_bor_hero_no_state_found
+            - generic [ref=e106]: 
+            - generic [ref=e107]: Location
+          - link " Accommodations" [ref=e109] [cursor=pointer]:
+            - /url: /borabora/accommodations/?_s_icmp=ja_bor_hero_no_state_found
+            - generic [ref=e110]: 
+            - generic [ref=e111]: Accommodations
+          - link " Photos & Videos" [ref=e113] [cursor=pointer]:
+            - /url: /borabora/photos-and-videos/?_s_icmp=ja_bor_hero_no_state_found
+            - generic [ref=e114]: 
+            - generic [ref=e115]: Photos & Videos
+          - link " Facilities & Amenities" [ref=e117] [cursor=pointer]:
+            - /url: /borabora/services-and-amenities/?_s_icmp=ja_bor_hero_no_state_found
+            - generic [ref=e118]: 
+            - generic [ref=e119]: Facilities & Amenities
+          - generic [aria-hidden] [ref=e120]:
+            - link:
+              - /url: /borabora/dining/?_s_icmp=ja_bor_hero_no_state_found
+              - generic: 
+              - generic: Dining
+          - generic [aria-hidden] [ref=e121]:
+            - link:
+              - /url: /borabora/spa/?_s_icmp=ja_bor_hero_no_state_found
+              - generic: 
+              - generic: Spa
+        - button " Next slide" [ref=e122] [cursor=pointer]:
+          - text: 
+          - generic [ref=e123]: Next slide
+    - text:        
+    - button " Play or pause video" [ref=e128] [cursor=pointer]:
+      - text: 
+      - generic [ref=e129]: Play or pause video
+  - generic [ref=e130]: SCROLL TO DISCOVER MORE
+  - text:            

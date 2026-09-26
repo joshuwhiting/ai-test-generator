@@ -1,6 +1,11 @@
 __pycache__/
 .pytest_cache/
-test_generation.py
+tests/code/test_generation.py
+tests/web/test_web_generation.py
 *.pyc
 
-JENKINS_SETUP_GUIDE.md
+pipeline/jenkins/JENKINS_SETUP_GUIDE.md
+
+.venv
+.playwright-mcp/
+.claude

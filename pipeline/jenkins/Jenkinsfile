@@ -11,12 +11,12 @@ pipeline {
     stages {
         stage('Install Dependencies') {
             steps {
-                sh 'python3 -m pip install -r my-tests/requirements.txt'
+                sh 'python3 -m pip install -r pipeline/requirements.txt'
             }
         }
     stage('Generate & Run Tests') {
         steps {
-            sh 'python3 test_generator.py my_code.py'
+            sh 'python3 ai_generator/test_generator.py my_code.py'
         }
     }
     }
