@@ -47,6 +47,9 @@ BROWSER_TOOLS = {
 
 MAX_TOOL_OUTPUT = 8000
 
+# Tool arguments the model may not use: "filename" makes browser_snapshot write to disk instead of returning the page
+BLOCKED_TOOL_ARGS = {"filename"}
+
 
 def clean_output(text: str) -> str:
     text = text.strip()
@@ -155,6 +158,12 @@ def count_tests(source: str) -> int:
     return len(_test_functions(source))
 
 
+def _without_blocked_args(schema: dict) -> dict:
+    properties = {k: v for k, v in schema.get("properties", {}).items() if k not in BLOCKED_TOOL_ARGS}
+    required = [r for r in schema.get("required", []) if r not in BLOCKED_TOOL_ARGS]
+    return {**schema, "properties": properties, "required": required}
+
+
 async def _run_browser_agent(prompt: str, model: str, max_steps: int) -> str:
     async with stdio_client(PLAYWRIGHT_SERVER) as (read, write):
         async with ClientSession(read, write) as session:
@@ -167,7 +176,7 @@ async def _run_browser_agent(prompt: str, model: str, max_steps: int) -> str:
                     "function": {
                         "name": t.name,
                         "description": t.description or "",
-                        "parameters": t.input_schema,
+                        "parameters": _without_blocked_args(t.input_schema),
                     },
                 }
                 for t in mcp_tools
@@ -193,7 +202,8 @@ async def _run_browser_agent(prompt: str, model: str, max_steps: int) -> str:
 
                 for call in msg.tool_calls:
                     print(f"  [browser] {call.function.name} {call.function.arguments}")
-                    result = await session.call_tool(call.function.name, dict(call.function.arguments))
+                    args = {k: v for k, v in call.function.arguments.items() if k not in BLOCKED_TOOL_ARGS}
+                    result = await session.call_tool(call.function.name, args)
                     text = "\n".join(c.text for c in result.content if c.type == "text")
                     # Other tools save the page snapshot to a file; fetch it inline so the model can see the page
                     if call.function.name != "browser_snapshot":
