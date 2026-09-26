@@ -16,6 +16,8 @@ class FindHotelPage(BasePage):
     def select_property(self, region: str, name: str) -> PropertyPage:
         """Open the region's accordion (if closed) and click the property.
 
+        Example: property_page = FindHotelPage(page).open(start_url).select_property("North America", "Miami")
+
         The page rebuilds its tabs after loading and again after the cookie banner is accepted,
         which can close the accordion or move the link mid-click, so each attempt starts over.
         """

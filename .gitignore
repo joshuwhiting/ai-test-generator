@@ -10,3 +10,4 @@ pipeline/jenkins/JENKINS_SETUP_GUIDE.md
 .venv
 .playwright-mcp/
 .claude
+test-results/

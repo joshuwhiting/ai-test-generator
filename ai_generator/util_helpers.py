@@ -25,7 +25,9 @@ MODEL: str = _model
 # Context window in tokens: must fit the prompt AND the model's reply. Ollama's default (4096) cuts off long test files.
 # Every call uses the same value so Ollama doesn't reload the model between calls.
 NUM_CTX = int(os.getenv("OLLAMA_NUM_CTX", "16384"))
-OLLAMA_OPTIONS = {"num_ctx": NUM_CTX}
+# Lower = less random: the same prompt gives the same kind of code each run, and fewer invented method names
+TEMPERATURE = float(os.getenv("OLLAMA_TEMPERATURE", "0.2"))
+OLLAMA_OPTIONS = {"num_ctx": NUM_CTX, "temperature": TEMPERATURE}
 
 MAX_TESTS = int(os.getenv("MAX_TESTS", "10"))
 
@@ -177,7 +179,19 @@ def _describe_function(node: ast.FunctionDef, indent: str) -> str:
     if node.returns:
         signature += f" -> {ast.unparse(node.returns)}"
     doc = ast.get_docstring(node)
-    return signature + (f'\n{indent}    """{doc.splitlines()[0]}"""' if doc else "")
+    if not doc:
+        return signature
+    # Full docstring: usage examples in it are what small models copy most reliably
+    doc_lines = "\n".join(f"{indent}    {line}".rstrip() for line in doc.splitlines())
+    return f'{signature}\n{indent}    """\n{doc_lines}\n{indent}    """'
+
+
+def drop_duplicate_imports(header: str, code: str) -> str:
+    """Remove import lines from model output that the header already has (models often repeat them)."""
+    existing = {line.strip() for line in header.splitlines() if line.strip()}
+    kept = [line for line in code.splitlines()
+            if not (line.startswith(("import ", "from ")) and line.strip() in existing)]
+    return "\n".join(kept).lstrip("\n")
 
 
 def _test_functions(source: str) -> list[ast.FunctionDef]:

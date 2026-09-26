@@ -1,6 +1,6 @@
 import sys
 from pathlib import Path
-from util_helpers import HEADED, WEB_TESTS_DIR, ask_model, describe_pages, write_and_check_tests
+from util_helpers import HEADED, WEB_TESTS_DIR, ask_model, describe_pages, drop_duplicate_imports, write_and_check_tests
 
 TEST_FILE = WEB_TESTS_DIR / "test_e2e_generation.py"
 EXAMPLE_TEST = WEB_TESTS_DIR / "test_booking_flow.py"
@@ -21,7 +21,8 @@ RULES = f"""Rules:
 - The test takes the `page: Page` fixture and the `start_url: str` fixture (the starting URL); start with FindHotelPage(page).open(start_url)
 - The cookie banner is accepted automatically; do not handle it
 - Work out dates from date.today() with timedelta, like the example test
-- Assert with the page objects' expect_... methods where they exist; otherwise use expect(...) on their Locator attributes
+- If a page object has an expect_... method for a check (e.g. "check the cart/stay" -> CartPanel.expect_stay), you MUST use it; do not write your own checks for the same thing
+- Otherwise assert with expect(...) on the page objects' Locator attributes. Never invent CSS selectors like .stay-dates
 - If a step has no page object method, write it with Playwright from the cheat sheet and put the comment # TODO: add to page objects above it
 - Write each test as a top-level function whose name starts with test_ and describes the flow
 
@@ -72,7 +73,7 @@ if len(sys.argv) != 2:
 flow = sys.argv[1]
 
 print("Generating test...")
-tests = IMPORT_LINE + generate_test(flow)
+tests = IMPORT_LINE + drop_duplicate_imports(IMPORT_LINE, generate_test(flow))
 
 MAX_RETRIES = 3
 
@@ -88,7 +89,7 @@ for attempt in range(MAX_RETRIES):
 
     if attempt < MAX_RETRIES - 1:
         print("Failures detected, asking model to fix...")
-        tests = IMPORT_LINE + fix_test(tests, output, flow)
+        tests = IMPORT_LINE + drop_duplicate_imports(IMPORT_LINE, fix_test(tests, output, flow))
     else:
         print(f"Max retries reached. Review {TEST_FILE} manually.")
         sys.exit(1)

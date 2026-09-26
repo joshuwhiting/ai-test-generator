@@ -27,7 +27,12 @@ Call these on `page`, or on a locator to search inside it.
 
 ## Assertions
 
-Always assert with `expect(...)`.
+Always assert with `expect(...)`. `expect()` takes a locator or `page` — never a string. Don't call `.inner_text()` and pass the result to `expect()`; pass the locator:
+
+```python
+expect(page.get_by_role("heading", level=3)).to_contain_text("Four Seasons Hotel Miami")   # right
+expect(heading.inner_text()).to_contain_text("...")                                        # wrong: a string
+```
 
 Page:
 - `expect(page).to_have_title("Exact title")`
@@ -60,4 +65,5 @@ frame.get_by_role("button", name="Book")
 - `expect(locator).to_be_accessible()` → `to_be_visible()` or `to_have_accessible_name(...)`
 - `expect(locator).to_exist()` → `to_be_visible()` or `to_have_count(1)`
 - `expect(page).to_have_path(...)` → `to_have_url(re.compile(r"/path"))`
+- `expect(locator.inner_text())` → `expect(locator)`. The type check reports this as `"str" is not assignable to "APIResponse"`
 - `expect(heading).to_have_level(1)` → `expect(page.get_by_role("heading", name="...", level=1)).to_be_visible()`

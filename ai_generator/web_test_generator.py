@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 from util_helpers import (
-    HEADED, MAX_TESTS, MODEL, WEB_TESTS_DIR, ask_model, count_tests, failing_test_names,
+    HEADED, MAX_TESTS, MODEL, WEB_TESTS_DIR, ask_model, count_tests, drop_duplicate_imports, failing_test_names,
     limit_tests, remove_tests, run_browser_agent, write_and_check_tests,
 )
 
@@ -114,7 +114,7 @@ site_info = explore_site(url)
 print(f"\nSite info:\n{site_info}\n")
 
 print("Generating tests...")
-tests = limit_tests(IMPORT_LINE + generate_tests(url, site_info), MAX_TESTS)
+tests = limit_tests(IMPORT_LINE + drop_duplicate_imports(IMPORT_LINE, generate_tests(url, site_info)), MAX_TESTS)
 
 MAX_RETRIES = 3
 
@@ -130,7 +130,7 @@ for attempt in range(MAX_RETRIES):
 
     if attempt < MAX_RETRIES - 1:
         print("Failures detected, asking model to fix...")
-        tests = limit_tests(IMPORT_LINE + fix_tests(tests, output, site_info), MAX_TESTS)
+        tests = limit_tests(IMPORT_LINE + drop_duplicate_imports(IMPORT_LINE, fix_tests(tests, output, site_info)), MAX_TESTS)
     else:
         print("Max retries reached. Removing tests that still fail...")
         remove_failing_tests(tests, output)

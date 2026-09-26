@@ -15,5 +15,6 @@ class BasePage:
         self.cart_button = page.get_by_role("button", name="view cart", exact=True)
 
     def open_cart(self) -> CartPanel:
+        """Click the header cart button and return the open cart panel. Available on every page."""
         self.cart_button.click()
         return CartPanel(self.page).wait_until_open()
