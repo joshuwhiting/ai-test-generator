@@ -13,6 +13,7 @@ from mcp.client.stdio import stdio_client
 ROOT = Path(__file__).resolve().parent.parent
 CODE_TESTS_DIR = ROOT / "tests" / "code"
 WEB_TESTS_DIR = ROOT / "tests" / "web"
+PAGES_DIR = ROOT / "pages"
 
 load_dotenv(ROOT / ".env")
 
@@ -96,6 +97,87 @@ def run_type_check(file: Path) -> tuple[bool, str]:
     )
     passed = result.returncode == 0
     return passed, result.stdout + result.stderr
+
+
+def write_and_check_tests(tests: str, test_file: Path, headed: bool = False) -> tuple[bool, str]:
+    """Write the tests, then type check them (fast) and run them with pytest (slow) if that passes."""
+    with open(test_file, "w") as f:
+        f.write(tests)
+
+    try:
+        if count_tests(tests) == 0:
+            return False, "No test functions found. Each test must be a separate top-level function whose name starts with test_."
+    except SyntaxError as e:
+        return False, f"SyntaxError: {e}"
+
+    # Catch invented methods/attributes before spending time launching a browser
+    type_ok, output = run_type_check(test_file)
+    if not type_ok:
+        return False, "Type check failed:\n" + output
+    return run_pytest(test_file, headed=headed)
+
+
+def describe_pages(pages_dir: Path = PAGES_DIR) -> tuple[str, str]:
+    """Summarise the page objects for a prompt.
+
+    Returns (import lines for every public class/function, a listing of their public methods with signatures
+    and docstrings). Read from the source each time, so the prompt stays in sync as page objects change.
+    """
+    imports = []
+    listing = []
+    for path in sorted(pages_dir.glob("*.py")):
+        if path.name == "__init__.py":
+            continue
+        module = f"pages.{path.stem}"
+        tree = ast.parse(path.read_text())
+        public = [n for n in tree.body if isinstance(n, (ast.ClassDef, ast.FunctionDef)) and not n.name.startswith("_")]
+        if public:
+            imports.append(f"from {module} import {', '.join(n.name for n in public)}")
+
+        for node in public:
+            if isinstance(node, ast.FunctionDef):
+                listing.append(_describe_function(node, indent=""))
+                continue
+            bases = ", ".join(ast.unparse(b) for b in node.bases)
+            listing.append(f"class {node.name}{f'({bases})' if bases else ''}:  # {module}")
+            if doc := ast.get_docstring(node):
+                listing.append(f'    """{doc.splitlines()[0]}"""')
+            for item in node.body:
+                if isinstance(item, ast.FunctionDef) and (item.name == "__init__" or not item.name.startswith("_")):
+                    listing.append(_describe_function(item, indent="    "))
+                if isinstance(item, ast.FunctionDef) and item.name == "__init__":
+                    listing.extend(_describe_attributes(item))
+            listing.append("")
+
+    return "\n".join(imports), "\n".join(listing)
+
+
+def _describe_attributes(init: ast.FunctionDef) -> list[str]:
+    """Public attributes set in __init__, e.g. "self.booking_form: BookingForm" or "self.heading: Locator"."""
+    lines = []
+    for stmt in ast.walk(init):
+        if not isinstance(stmt, ast.Assign):
+            continue
+        for target in stmt.targets:
+            if not (isinstance(target, ast.Attribute) and isinstance(target.value, ast.Name) and target.value.id == "self"):
+                continue
+            if target.attr.startswith("_") or target.attr == "page":
+                continue
+            # A call to a capitalised name constructs a page object/component; anything else here is a Playwright Locator
+            kind = "Locator"
+            value = stmt.value
+            if isinstance(value, ast.Call) and isinstance(value.func, ast.Name) and value.func.id[:1].isupper():
+                kind = value.func.id
+            lines.append(f"    self.{target.attr}: {kind}")
+    return lines
+
+
+def _describe_function(node: ast.FunctionDef, indent: str) -> str:
+    signature = f"{indent}def {node.name}({ast.unparse(node.args)})"
+    if node.returns:
+        signature += f" -> {ast.unparse(node.returns)}"
+    doc = ast.get_docstring(node)
+    return signature + (f'\n{indent}    """{doc.splitlines()[0]}"""' if doc else "")
 
 
 def _test_functions(source: str) -> list[ast.FunctionDef]:

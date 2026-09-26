@@ -2,6 +2,7 @@ __pycache__/
 .pytest_cache/
 tests/code/test_generation.py
 tests/web/test_web_generation.py
+tests/web/test_e2e_generation.py
 *.pyc
 
 pipeline/jenkins/JENKINS_SETUP_GUIDE.md

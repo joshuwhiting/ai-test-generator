@@ -63,3 +63,13 @@ To watch the browser, set `HEADED=true` in `.env`. To re-run the generated tests
 python3 -m pytest tests/web --headed
 
 To run every test: `python3 -m pytest`
+
+## End-to-End Tests from Page Objects
+
+Describe a user flow in plain English; the model writes a test using the page objects in `pages/`
+(it's given every page object's methods, plus `tests/web/test_booking_flow.py` as an example).
+
+python3 ai_generator/e2e_test_generator.py "Select Miami in North America, pick dates 4 weeks out for 2 nights, check rates, add the first room to the cart, open the cart"
+
+Generated tests are written to `tests/web/test_e2e_generation.py`. The flow starts at `URL` in `.env`.
+Steps with no page object are written in plain Playwright and marked `# TODO: add to page objects`.

@@ -2,7 +2,7 @@ import sys
 from pathlib import Path
 from util_helpers import (
     HEADED, MAX_TESTS, MODEL, WEB_TESTS_DIR, ask_model, count_tests, failing_test_names,
-    limit_tests, remove_tests, run_browser_agent, run_pytest, run_type_check,
+    limit_tests, remove_tests, run_browser_agent, write_and_check_tests,
 )
 
 TEST_FILE = WEB_TESTS_DIR / "test_web_generation.py"
@@ -77,20 +77,7 @@ Keep all passing tests exactly as they are. Return the COMPLETE test file with a
 
 
 def check_tests(tests: str) -> tuple[bool, str]:
-    with open(TEST_FILE, "w") as f:
-        f.write(tests)
-
-    try:
-        if count_tests(tests) == 0:
-            return False, "No test functions found. Each test must be a separate top-level function whose name starts with test_."
-    except SyntaxError as e:
-        return False, f"SyntaxError: {e}"
-
-    # Catch invented methods/attributes before spending time launching a browser
-    type_ok, output = run_type_check(TEST_FILE)
-    if not type_ok:
-        return False, "Type check failed:\n" + output
-    return run_pytest(TEST_FILE, headed=HEADED)
+    return write_and_check_tests(tests, TEST_FILE, headed=HEADED)
 
 
 def remove_failing_tests(tests: str, output: str) -> None:
